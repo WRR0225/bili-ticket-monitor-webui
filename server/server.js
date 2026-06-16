@@ -69,12 +69,14 @@ function parseTicketData(data) {
     const tickets = (screen.ticket_list || []).map(ticket => {
       const saleFlag = ticket.sale_flag || {};
       const statusText = saleFlagMap[saleFlag.sale_flag_num] || saleFlag.display_name || '未知';
+      const priceText = ticket.price ? `¥${(ticket.price / 100).toFixed(0)} ` : '';
+      const descWithPrice = `${priceText}${ticket.desc || ''}`.trim();
       
       return {
         id: ticket.id,
-        name: `${screenName} ${ticket.desc || ''}`.trim(),
+        name: `${screenName} ${descWithPrice}`.trim(),
         screenName: screenName,
-        desc: ticket.desc || '',
+        desc: descWithPrice,
         status: statusText,
         statusNum: saleFlag.sale_flag_num || 0,
         price: ticket.price || '',
@@ -126,18 +128,18 @@ function getMockData() {
     {
       screenName: '2025-07-01 周三 10:30',
       tickets: [
-        { id: 'mock-1-1', desc: '内场1280元' },
-        { id: 'mock-1-2', desc: '看台980元' },
-        { id: 'mock-1-3', desc: '看台680元' },
-        { id: 'mock-1-4', desc: '看台480元' },
+        { id: 'mock-1-1', desc: '¥1280 内场' },
+        { id: 'mock-1-2', desc: '¥980 看台' },
+        { id: 'mock-1-3', desc: '¥680 看台' },
+        { id: 'mock-1-4', desc: '¥480 看台' },
       ],
     },
     {
       screenName: '2025-07-02 周四 10:30',
       tickets: [
-        { id: 'mock-2-1', desc: '内场1280元' },
-        { id: 'mock-2-2', desc: '看台980元' },
-        { id: 'mock-2-3', desc: '看台680元' },
+        { id: 'mock-2-1', desc: '¥1280 内场' },
+        { id: 'mock-2-2', desc: '¥980 看台' },
+        { id: 'mock-2-3', desc: '¥680 看台' },
       ],
     },
   ];
