@@ -8,14 +8,14 @@ const STATUS_CONFIG = {
   '暂时售罄': { color: '#f97316', bgColor: 'rgba(249,115,22,0.15)', dotColor: '#f97316' },
   '已售罄': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
   '已停售': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
-  '不可售': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
+  '不可售': { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' },
 }
 
 // 进度条块颜色
 const BLOCK_COLORS = {
   '已售罄': '#ef4444',
   '已停售': '#ef4444',
-  '不可售': '#ef4444',
+  '不可售': '#64748b',
   '未开售': '#64748b',
   '暂时售罄': '#f97316',
   '预售中': '#22c55e',
