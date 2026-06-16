@@ -32,9 +32,23 @@
 ### 环境要求
 
 - [Node.js](https://nodejs.org/) >= 18
-- npm >= 9
 
-### 方式一：一键启动（推荐 Windows 用户）
+### 方式一：下载预打包版本（推荐）
+
+前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的文件
+
+1. 解压到任意目录
+2. 双击 `启动余票监控.bat`
+3. 自动打开浏览器访问监控页面
+
+> 已包含所有运行依赖，无需执行 `npm install`。
+
+### 方式二：克隆仓库 + 一键启动
+
+```bash
+git clone https://github.com/WRR0225/bili-ticket-monitor-webui.git
+cd bili-ticket-monitor-webui
+```
 
 直接双击项目根目录下的 `启动余票监控.bat` 文件：
 
@@ -43,7 +57,7 @@
 - 自动打开浏览器访问监控页面
 - 按任意键即可停止所有服务
 
-### 方式二：手动启动
+### 方式三：手动启动（开发者）
 
 ```bash
 # 1. 安装依赖
@@ -56,15 +70,6 @@ npm run server
 npm run dev
 
 # 4. 打开浏览器访问 http://localhost:5173
-```
-
-### 方式三：生产模式
-
-```bash
-# 构建前端 + 启动后端（一个命令搞定）
-npm start
-
-# 访问 http://localhost:3001
 ```
 
 ## 📖 使用方法
