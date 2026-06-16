@@ -29,11 +29,13 @@ function App() {
   const [error, setError] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
   const [interval, setIntervalValue] = useState(2)
-  const [expanded, setExpanded] = useState(true)
+  const [expandedScreens, setExpandedScreens] = useState(() => new Set())
   const [statusChanges, setStatusChanges] = useState({})
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const prevDataRef = useRef(null)
   const timerRef = useRef(null)
+  const historyRef = useRef({}) // { ticketId: [{ time: number, status: string }] }
+  const initialExpandDoneRef = useRef(false)
 
   // 切换主题
   const toggleTheme = () => {
@@ -47,7 +49,8 @@ function App() {
     if (!ticketId) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/ticket/${ticketId}`)
+      const apiPath = ticketId === 'demo' ? `/api/mock/demo` : `/api/ticket/${ticketId}`
+      const res = await fetch(apiPath)
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
         throw new Error(errData.error || `请求失败 (${res.status})`)
@@ -66,9 +69,31 @@ function App() {
         })
         if (Object.keys(changes).length > 0) {
           setStatusChanges(prev => ({ ...prev, ...changes }))
+          // 动画结束后自动清除变化标记
+          setTimeout(() => {
+            setStatusChanges(prev => {
+              const next = { ...prev }
+              Object.keys(changes).forEach(id => delete next[id])
+              return next
+            })
+          }, 2100)
         }
       }
       
+      // 记录历史状态（变化驱动：仅状态变化时才写入）
+      const now = Date.now()
+      const TEN_MIN = 10 * 60 * 1000
+      result.allTickets?.forEach(t => {
+        if (!historyRef.current[t.id]) historyRef.current[t.id] = []
+        const hist = historyRef.current[t.id]
+        const last = hist[hist.length - 1]
+        if (!last || last.status !== t.status) {
+          hist.push({ time: now, status: t.status })
+        }
+        // 清理超过10分钟的旧数据
+        historyRef.current[t.id] = hist.filter(h => h.time > now - TEN_MIN)
+      })
+
       prevDataRef.current = result
       setData(result)
       setLastUpdate(new Date())
@@ -88,11 +113,22 @@ function App() {
     return () => window.clearInterval(timerRef.current)
   }, [ticketId, interval, fetchData])
 
+  // 数据首次加载后自动展开所有场次（仅一次）
+  useEffect(() => {
+    if (data?.screens?.length && !initialExpandDoneRef.current) {
+      setExpandedScreens(new Set(data.screens.map((_, i) => i)))
+      initialExpandDoneRef.current = true
+    }
+  }, [data?.screens])
+
   // 保存票务ID
   const handleSetId = () => {
     const id = inputId.trim()
     if (id) {
       setTicketId(id)
+      setExpandedScreens(new Set())
+      historyRef.current = {}
+      initialExpandDoneRef.current = false
       localStorage.setItem('ticketId', id)
     }
   }
@@ -107,6 +143,9 @@ function App() {
       setError(null)
       setLastUpdate(null)
       setStatusChanges({})
+      setExpandedScreens(new Set())
+      historyRef.current = {}
+      initialExpandDoneRef.current = false
       localStorage.removeItem('ticketId')
     }
   }
@@ -210,7 +249,7 @@ function App() {
               </div>
 
               {/* 状态统计 */}
-              <div className="stats-bar" onClick={() => setExpanded(!expanded)}>
+              <div className="stats-bar">
                 <div className="stats-badges">
                   {data.stats.soldOut > 0 && (
                     <span className="stat-badge stat-sold-out">已售罄：{data.stats.soldOut}</span>
@@ -228,52 +267,136 @@ function App() {
                     <span className="stat-badge stat-stopped">已停售：{data.stats.stopped}</span>
                   )}
                 </div>
-                <button className="expand-btn">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                    style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
               </div>
 
               {/* 更新时间 */}
               <div className="update-time">
-                上次更新：{lastUpdate ? formatTime(lastUpdate) : '--'}
-                <span className="monitor-id">ID: {ticketId} | 间隔: {interval}s</span>
+                当前刷新间隔: {interval}秒&nbsp;&nbsp;·&nbsp;&nbsp;上次状态更新：{lastUpdate ? formatTime(lastUpdate) : '--'}
               </div>
 
               {/* 票种列表 */}
-              {expanded && data.screens.map((screen, si) => (
-                <div key={si} className="screen-group">
-                  <div className="screen-title">{screen.screenName}</div>
-                  {screen.tickets.map((ticket) => {
-                    const config = STATUS_CONFIG[ticket.status] || STATUS_CONFIG['未知']
-                    const blockColor = BLOCK_COLORS[ticket.status] || '#64748b'
-                    const changed = statusChanges[ticket.id]
+              {data.screens.map((screen, si) => {
+                const isExpanded = expandedScreens.has(si)
+                const toggleScreen = () => {
+                  setExpandedScreens(prev => {
+                    const next = new Set(prev)
+                    if (next.has(si)) next.delete(si)
+                    else next.add(si)
+                    return next
+                  })
+                }
+                return (
+                  <div key={si} className="screen-group">
+                    <div className="screen-title" onClick={toggleScreen}>
+                      <span>{screen.screenName}</span>
+                      <button className="expand-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </button>
+                    </div>
+                    {isExpanded && screen.tickets.map((ticket) => {
+                      const config = STATUS_CONFIG[ticket.status] || STATUS_CONFIG['未知']
+                      const changed = statusChanges[ticket.id]
                     
                     return (
                       <div key={ticket.id} className={`ticket-card ${changed ? 'changed' : ''}`}>
                         <div className="ticket-row">
                           <div className="ticket-dot" style={{ backgroundColor: config.dotColor, boxShadow: `0 0 10px ${config.dotColor}` }}></div>
-                          <div className="ticket-name">{ticket.name}</div>
+                          <div className="ticket-name">{ticket.desc || ticket.name}</div>
                           <div className="ticket-status" style={{ backgroundColor: config.bgColor, color: config.color }}>
                             {ticket.status}
                           </div>
                         </div>
                         <div className="progress-bar">
-                          {Array.from({ length: TOTAL_BLOCKS }, (_, i) => {
-                            const filled = ticket.status === '暂时售罄' ? (i < 54) : (i < TOTAL_BLOCKS)
-                            const hasGreen = ticket.status === '暂时售罄' && i < 6
-                            return (
+                          {(() => {
+                            const BLOCK_MS = 10000 // 每格10秒
+                            const WIN_MS = TOTAL_BLOCKS * BLOCK_MS // 10分钟窗口
+                            const currentTime = Date.now()
+                            const startTime = currentTime - WIN_MS
+                            const rawHistory = historyRef.current[ticket.id] || []
+                            const EMPTY_COLOR = 'rgba(100,116,139,0.2)'
+
+                            // 无历史数据：全部灰色
+                            if (rawHistory.length === 0) {
+                              return Array.from({ length: TOTAL_BLOCKS }, (_, i) => (
+                                <div key={i} className="progress-block" style={{ backgroundColor: EMPTY_COLOR }} />
+                              ))
+                            }
+
+                            // 提取转换点：仅保留状态实际发生变化的记录
+                            let initialStatus = rawHistory[0].status
+                            const transitions = []
+                            for (let k = 1; k < rawHistory.length; k++) {
+                              if (rawHistory[k].status !== rawHistory[k - 1].status) {
+                                transitions.push(rawHistory[k])
+                              }
+                            }
+
+                            // 跳过窗口开始前的转换，更新初始状态
+                            let tIdx = 0
+                            while (tIdx < transitions.length && transitions[tIdx].time <= startTime) {
+                              initialStatus = transitions[tIdx].status
+                              tIdx++
+                            }
+
+                            // 构建格子序列（从首次记录时间开始，而非10分钟前）
+                            const blocks = []
+                            let curTime = Math.max(startTime, rawHistory[0].time)
+                            let curStatus = initialStatus
+
+                            while (blocks.length < TOTAL_BLOCKS && curTime < currentTime) {
+                              const blockEnd = Math.min(curTime + BLOCK_MS, currentTime)
+
+                              // 在当前10秒区间内查找第一个状态变化
+                              let changeInBlock = null
+                              for (let k = tIdx; k < transitions.length; k++) {
+                                if (transitions[k].time > curTime && transitions[k].time <= blockEnd) {
+                                  changeInBlock = transitions[k]
+                                  break
+                                }
+                              }
+
+                              if (changeInBlock) {
+                                // 检测到变化：立刻显示新状态格
+                                blocks.push(changeInBlock.status)
+                                curTime = changeInBlock.time + 1
+                                curStatus = changeInBlock.status
+                                tIdx++
+                              } else {
+                                // 无变化：稳定格，10秒
+                                blocks.push(curStatus)
+                                curTime = blockEnd
+                              }
+                            }
+
+                            // 超出60格时从左边丢弃最旧的
+                            while (blocks.length > TOTAL_BLOCKS) blocks.shift()
+
+                            // 确保最右侧格子始终显示当前最新状态
+                            if (blocks.length > 0) {
+                              blocks[blocks.length - 1] = ticket.status
+                            }
+
+                            // 不足60格时左边补灰色空白（监控时间不满10分钟）
+                            const padded = []
+                            while (padded.length + blocks.length < TOTAL_BLOCKS) {
+                              padded.push(EMPTY_COLOR)
+                            }
+
+                            return [...padded, ...blocks].map((item, i) => (
                               <div
                                 key={i}
                                 className="progress-block"
                                 style={{
-                                  backgroundColor: hasGreen ? '#22c55e' : filled ? blockColor : 'rgba(100,116,139,0.2)',
+                                  backgroundColor: typeof item === 'string' && item.startsWith('rgba')
+                                    ? item
+                                    : (BLOCK_COLORS[item] || '#64748b'),
                                 }}
                               />
-                            )
-                          })}
+                            ))
+                          })()}
                         </div>
                         <div className="ticket-time">
                           <span>{startTimeStr}</span>
@@ -282,8 +405,9 @@ function App() {
                       </div>
                     )
                   })}
-                </div>
-              ))}
+                  </div>
+                )
+              })}
 
               {/* 无数据 */}
               {data.allTickets?.length === 0 && (

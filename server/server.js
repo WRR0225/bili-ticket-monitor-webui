@@ -83,7 +83,7 @@ function parseTicketData(data) {
     });
 
     return {
-      screenName: screen.screen_name,
+      screenName: screenName,
       tickets,
     };
   });
@@ -108,6 +108,85 @@ function parseTicketData(data) {
     timestamp: new Date().toISOString(),
   };
 }
+
+// ========== 模拟接口 ==========
+const mockTicketStates = {};
+const MOCK_STATUSES = ['预售中', '暂时售罄', '已售罄'];
+const MOCK_TRANSITIONS = {
+  '预售中': ['预售中', '预售中', '暂时售罄', '暂时售罄', '已售罄'],
+  '暂时售罄': ['暂时售罄', '预售中', '预售中', '已售罄'],
+  '已售罄': ['已售罄', '已售罄', '已售罄', '暂时售罄'],
+  '未开售': ['未开售', '预售中'],
+  '已停售': ['已停售'],
+  '不可售': ['不可售'],
+};
+
+function getMockData() {
+  const screens = [
+    {
+      screenName: '2025-07-01 周三 10:30',
+      tickets: [
+        { id: 'mock-1-1', desc: '内场1280元' },
+        { id: 'mock-1-2', desc: '看台980元' },
+        { id: 'mock-1-3', desc: '看台680元' },
+        { id: 'mock-1-4', desc: '看台480元' },
+      ],
+    },
+    {
+      screenName: '2025-07-02 周四 10:30',
+      tickets: [
+        { id: 'mock-2-1', desc: '内场1280元' },
+        { id: 'mock-2-2', desc: '看台980元' },
+        { id: 'mock-2-3', desc: '看台680元' },
+      ],
+    },
+  ];
+
+  const screenData = screens.map(screen => {
+    const tickets = screen.tickets.map(ticket => {
+      if (!mockTicketStates[ticket.id]) {
+        mockTicketStates[ticket.id] = '预售中';
+      }
+      // ~30% 概率发生状态变化
+      if (Math.random() < 0.3) {
+        const possible = MOCK_TRANSITIONS[mockTicketStates[ticket.id]] || [mockTicketStates[ticket.id]];
+        mockTicketStates[ticket.id] = possible[Math.floor(Math.random() * possible.length)];
+      }
+      return {
+        id: ticket.id,
+        name: `${screen.screenName} ${ticket.desc}`,
+        screenName: screen.screenName,
+        desc: ticket.desc,
+        status: mockTicketStates[ticket.id],
+        statusNum: 0,
+        price: '',
+        saleFlag: {},
+      };
+    });
+    return { screenName: screen.screenName, tickets };
+  });
+
+  const allTickets = screenData.flatMap(s => s.tickets);
+  return {
+    name: '【模拟】2026 XX漫展',
+    screens: screenData,
+    allTickets,
+    stats: {
+      total: allTickets.length,
+      soldOut: allTickets.filter(t => t.status === '已售罄').length,
+      tempSoldOut: allTickets.filter(t => t.status === '暂时售罄').length,
+      onSale: allTickets.filter(t => t.status === '预售中').length,
+      notStarted: allTickets.filter(t => t.status === '未开售').length,
+      stopped: allTickets.filter(t => t.status === '已停售').length,
+      unavailable: allTickets.filter(t => t.status === '不可售').length,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+app.get('/api/mock/:id', (req, res) => {
+  res.json(getMockData());
+});
 
 // 生产环境：提供静态文件
 const distPath = path.join(__dirname, '..', 'dist');
