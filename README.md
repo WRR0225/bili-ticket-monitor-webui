@@ -35,47 +35,46 @@
 
 ### 方式一：下载预打包版本（推荐）
 
-前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的文件
+前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的 `.zip` 文件，解压到任意目录。
 
-1. 解压到任意目录
-2. 双击 `启动余票监控.bat`
-3. 自动打开浏览器访问监控页面
+**Windows 用户：**
+
+双击 `启动余票监控_Windows.bat`，自动打开浏览器访问监控页面。
+
+**Mac 用户：**
+
+打开终端，进入解压目录，执行：
+
+```bash
+chmod +x 启动余票监控_Mac.sh
+./启动余票监控_Mac.sh
+```
 
 > 已包含所有运行依赖，无需执行 `npm install`。
 
-### 方式二：克隆仓库 + 一键启动
+### 方式二：克隆仓库 + 启动
 
 ```bash
 git clone https://github.com/WRR0225/bili-ticket-monitor-webui.git
 cd bili-ticket-monitor-webui
+npm install
 ```
 
-直接双击项目根目录下的 `启动余票监控.bat` 文件：
+**Windows 用户：** 双击 `启动余票监控_Windows.bat` 即可。
 
-- 首次运行会自动安装依赖
-- 自动启动前后端服务
-- 自动打开浏览器访问监控页面
-- 按任意键即可停止所有服务
-
-### 方式三：手动启动（开发者）
+**Mac用户：**
 
 ```bash
-# 1. 安装依赖
-npm install
-
-# 2. 启动后端 API 代理（端口 3001）
 npm run server
-
-# 3. 新开一个终端，启动前端开发服务器（端口 5173）
+# 另开一个终端
 npm run dev
-
-# 4. 打开浏览器访问 http://localhost:5173
+# 浏览器访问 http://localhost:5173
 ```
 
-## 📖 使用方法
+## 📖 使用说明
 
-1. 打开 B站会员购，找到你想监控的活动
-2. 从活动链接中提取票务 ID，例如：
+1. 打开 B站会员购网页版，找到你想监控的活动
+2. 从浏览器地址栏链接中提取票务 ID，例如：
    ```
    https://show.bilibili.com/platform/detail.html?id=1001701
                                                      ^^^^^^
@@ -87,13 +86,14 @@ npm run dev
 ## 🏗️ 项目结构
 
 ```
-bili-ticket-monitor/
+bili-ticket-monitor-webui/
 ├── index.html              # 入口 HTML
 ├── package.json            # 项目配置与依赖
 ├── vite.config.js          # Vite 构建配置（含 API 代理）
-├── 启动余票监控.bat         # Windows 一键启动脚本
+├── 启动余票监控_Windows.bat  # Windows 一键启动脚本
+├── 启动余票监控_Mac.sh       # Mac启动脚本
 ├── server/
-│   └── server.js           # Express 后端（代理 B站 API，避免跨域）
+│   └── server.js           # Express 后端（API 代理 + 模拟接口 + 静态文件托管）
 └── src/
     ├── main.jsx            # React 入口
     ├── App.jsx             # 主组件（轮询、状态管理、UI 逻辑）
