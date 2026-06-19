@@ -49,20 +49,27 @@ echo.
 
 start http://localhost:5173
 
-echo  程序已启动！按任意键停止并退出...
-pause >nul
+echo  程序已启动！关闭监控页面后将自动停止所有服务...
 
-:: 停止所有相关进程
-echo.
+:monitor
+timeout /t 2 /nobreak >nul
+
+netstat -aon | findstr ":3001" | findstr "LISTENING" >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo  服务已关闭，正在清理...
+    goto :stop
+)
+goto :monitor
+
+:stop
 echo  正在停止服务...
 taskkill /F /FI "WINDOWTITLE eq B站余票监控-后端" >nul 2>&1
 taskkill /F /FI "WINDOWTITLE eq B站余票监控-前端" >nul 2>&1
-:: 同时停止 node 和 vite 进程
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5173" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
-
 echo  已停止，再见！

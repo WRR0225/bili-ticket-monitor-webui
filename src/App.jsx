@@ -5,10 +5,12 @@ import './App.css'
 const STATUS_CONFIG = {
   '未开售': { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' },
   '售卖中': { color: '#22c55e', bgColor: 'rgba(34,197,94,0.15)', dotColor: '#22c55e' },
+  '预售中': { color: '#22c55e', bgColor: 'rgba(34,197,94,0.15)', dotColor: '#22c55e' },
   '暂时售罄': { color: '#f97316', bgColor: 'rgba(249,115,22,0.15)', dotColor: '#f97316' },
   '已售罄': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
   '已停售': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
   '不可售': { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' },
+  '未知': { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' },
 }
 
 // 进度条块颜色
@@ -19,6 +21,7 @@ const BLOCK_COLORS = {
   '未开售': '#64748b',
   '暂时售罄': '#f97316',
   '售卖中': '#22c55e',
+  '预售中': '#22c55e',
 }
 
 function App() {
@@ -112,6 +115,15 @@ function App() {
     timerRef.current = window.setInterval(fetchData, interval * 1000)
     return () => window.clearInterval(timerRef.current)
   }, [ticketId, interval, fetchData])
+
+  // 关闭页面时通知服务器关机
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon('/api/shutdown')
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
 
   // 数据首次加载后自动展开所有场次（仅一次）
   useEffect(() => {
@@ -251,20 +263,23 @@ function App() {
               {/* 状态统计 */}
               <div className="stats-bar">
                 <div className="stats-badges">
-                  {data.stats.soldOut > 0 && (
-                    <span className="stat-badge stat-sold-out">已售罄：{data.stats.soldOut}</span>
+                  {data.stats.onSale > 0 && (
+                    <span className="stat-badge stat-on-sale">售卖中：{data.stats.onSale}</span>
                   )}
                   {data.stats.tempSoldOut > 0 && (
                     <span className="stat-badge stat-temp-sold">暂时售罄：{data.stats.tempSoldOut}</span>
                   )}
-                  {data.stats.onSale > 0 && (
-                    <span className="stat-badge stat-on-sale">售卖中：{data.stats.onSale}</span>
-                  )}
-                  {data.stats.notStarted > 0 && (
-                    <span className="stat-badge stat-not-started">未开售：{data.stats.notStarted}</span>
+                  {data.stats.soldOut > 0 && (
+                    <span className="stat-badge stat-sold-out">已售罄：{data.stats.soldOut}</span>
                   )}
                   {data.stats.stopped > 0 && (
                     <span className="stat-badge stat-stopped">已停售：{data.stats.stopped}</span>
+                  )}
+                  {data.stats.unavailable > 0 && (
+                    <span className="stat-badge stat-not-started">不可售：{data.stats.unavailable}</span>
+                  )}
+                  {data.stats.notStarted > 0 && (
+                    <span className="stat-badge stat-not-started">未开售：{data.stats.notStarted}</span>
                   )}
                 </div>
               </div>
@@ -300,7 +315,7 @@ function App() {
                       </button>
                     </div>
                     {isExpanded && screen.tickets.map((ticket) => {
-                      const config = STATUS_CONFIG[ticket.status] || STATUS_CONFIG['未知']
+                      const config = STATUS_CONFIG[ticket.status] || STATUS_CONFIG['未知'] || { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' }
                       const changed = statusChanges[ticket.id]
                     
                     return (

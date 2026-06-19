@@ -68,7 +68,8 @@ function parseTicketData(data) {
     const screenName = screen.screen_name || screen.screenName || screen.name || '';
     const tickets = (screen.ticket_list || []).map(ticket => {
       const saleFlag = ticket.sale_flag || {};
-      const statusText = saleFlagMap[saleFlag.sale_flag_num] || saleFlag.display_name || '未知';
+      const rawStatus = saleFlagMap[saleFlag.sale_flag_num] || saleFlag.display_name || '未知';
+      const statusText = rawStatus === '预售中' ? '售卖中' : rawStatus;
       const priceText = ticket.price ? `¥${(ticket.price / 100).toFixed(0)} ` : '';
       const descWithPrice = `${priceText}${ticket.desc || ''}`.trim();
       
@@ -200,6 +201,13 @@ app.get('*', (req, res) => {
       res.status(200).json({ status: 'API server running' });
     }
   });
+});
+
+// 关机接口：前端关闭时自动关闭服务器
+app.post('/api/shutdown', (req, res) => {
+  res.json({ status: 'shutting down' });
+  console.log('🛑 浏览器已关闭，服务器正在停止...');
+  setTimeout(() => process.exit(0), 500);
 });
 
 app.listen(PORT, () => {
