@@ -4,7 +4,7 @@ import './App.css'
 // 状态颜色配置
 const STATUS_CONFIG = {
   '未开售': { color: '#94a3b8', bgColor: 'rgba(148,163,184,0.15)', dotColor: '#64748b' },
-  '预售中': { color: '#22c55e', bgColor: 'rgba(34,197,94,0.15)', dotColor: '#22c55e' },
+  '售卖中': { color: '#22c55e', bgColor: 'rgba(34,197,94,0.15)', dotColor: '#22c55e' },
   '暂时售罄': { color: '#f97316', bgColor: 'rgba(249,115,22,0.15)', dotColor: '#f97316' },
   '已售罄': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
   '已停售': { color: '#ef4444', bgColor: 'rgba(239,68,68,0.15)', dotColor: '#ef4444' },
@@ -18,7 +18,7 @@ const BLOCK_COLORS = {
   '不可售': '#64748b',
   '未开售': '#64748b',
   '暂时售罄': '#f97316',
-  '预售中': '#22c55e',
+  '售卖中': '#22c55e',
 }
 
 function App() {
@@ -258,7 +258,7 @@ function App() {
                     <span className="stat-badge stat-temp-sold">暂时售罄：{data.stats.tempSoldOut}</span>
                   )}
                   {data.stats.onSale > 0 && (
-                    <span className="stat-badge stat-on-sale">预售中：{data.stats.onSale}</span>
+                    <span className="stat-badge stat-on-sale">售卖中：{data.stats.onSale}</span>
                   )}
                   {data.stats.notStarted > 0 && (
                     <span className="stat-badge stat-not-started">未开售：{data.stats.notStarted}</span>
@@ -272,6 +272,9 @@ function App() {
               {/* 更新时间 */}
               <div className="update-time">
                 当前刷新间隔: {interval}秒&nbsp;&nbsp;·&nbsp;&nbsp;上次状态更新：{lastUpdate ? formatTime(lastUpdate) : '--'}
+              </div>
+              <div className="update-time">
+                票的状态没有发生变化时，每一格代表10秒；当票的状态发生改变时，立刻会产生新的一格
               </div>
 
               {/* 票种列表 */}
@@ -342,7 +345,7 @@ function App() {
                             }
 
                             // 构建格子序列（从首次记录时间开始，而非10分钟前）
-                            const blocks = []
+                            const blocks = [] // 每项: { status, timeStart, timeEnd }
                             let curTime = Math.max(startTime, rawHistory[0].time)
                             let curStatus = initialStatus
 
@@ -360,13 +363,13 @@ function App() {
 
                               if (changeInBlock) {
                                 // 检测到变化：立刻显示新状态格
-                                blocks.push(changeInBlock.status)
+                                blocks.push({ status: changeInBlock.status, timeStart: curTime, timeEnd: changeInBlock.time })
                                 curTime = changeInBlock.time + 1
                                 curStatus = changeInBlock.status
                                 tIdx++
                               } else {
                                 // 无变化：稳定格，10秒
-                                blocks.push(curStatus)
+                                blocks.push({ status: curStatus, timeStart: curTime, timeEnd: blockEnd })
                                 curTime = blockEnd
                               }
                             }
@@ -376,26 +379,33 @@ function App() {
 
                             // 确保最右侧格子始终显示当前最新状态
                             if (blocks.length > 0) {
-                              blocks[blocks.length - 1] = ticket.status
+                              blocks[blocks.length - 1].status = ticket.status
                             }
 
                             // 不足60格时左边补灰色空白（监控时间不满10分钟）
                             const padded = []
                             while (padded.length + blocks.length < TOTAL_BLOCKS) {
-                              padded.push(EMPTY_COLOR)
+                              padded.push(null)
                             }
 
-                            return [...padded, ...blocks].map((item, i) => (
-                              <div
-                                key={i}
-                                className="progress-block"
-                                style={{
-                                  backgroundColor: typeof item === 'string' && item.startsWith('rgba')
-                                    ? item
-                                    : (BLOCK_COLORS[item] || '#64748b'),
-                                }}
-                              />
-                            ))
+                            const fmtTime = (ts) => {
+                              const d = new Date(ts)
+                              return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`
+                            }
+
+                            return [...padded, ...blocks].map((item, i) => {
+                              if (!item) return <div key={i} className="progress-block" style={{ backgroundColor: EMPTY_COLOR }} />
+                              const color = BLOCK_COLORS[item.status] || '#64748b'
+                              const title = `${fmtTime(item.timeStart)} ~ ${fmtTime(item.timeEnd)}`
+                              return (
+                                <div
+                                  key={i}
+                                  className="progress-block"
+                                  title={title}
+                                  style={{ backgroundColor: color }}
+                                />
+                              )
+                            })
                           })()}
                         </div>
                         <div className="ticket-time">

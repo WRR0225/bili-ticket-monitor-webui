@@ -435,10 +435,17 @@
 }
 
 .progress-block {
-  height: 12px;
+  height: 16px;
   flex: 1;
   border-radius: 2px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.15s;
+  cursor: default;
+  position: relative;
+}
+
+.progress-block:hover {
+  transform: scaleY(1.4);
+  z-index: 1;
 }
 
 /* 时间行 */

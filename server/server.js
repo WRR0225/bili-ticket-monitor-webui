@@ -56,7 +56,7 @@ function parseTicketData(data) {
   const name = data.name || '';
   const saleFlagMap = {
     1: '未开售',
-    2: '预售中',
+    2: '售卖中',
     3: '暂时售罄',
     4: '已售罄',
     5: '已停售',
@@ -96,7 +96,7 @@ function parseTicketData(data) {
     total: allTickets.length,
     soldOut: allTickets.filter(t => t.status === '已售罄').length,
     tempSoldOut: allTickets.filter(t => t.status === '暂时售罄').length,
-    onSale: allTickets.filter(t => t.status === '预售中').length,
+    onSale: allTickets.filter(t => t.status === '售卖中').length,
     notStarted: allTickets.filter(t => t.status === '未开售').length,
     stopped: allTickets.filter(t => t.status === '已停售').length,
     unavailable: allTickets.filter(t => t.status === '不可售').length,
@@ -113,12 +113,12 @@ function parseTicketData(data) {
 
 // ========== 模拟接口 ==========
 const mockTicketStates = {};
-const MOCK_STATUSES = ['预售中', '暂时售罄', '已售罄'];
+const MOCK_STATUSES = ['售卖中', '暂时售罄', '已售罄'];
 const MOCK_TRANSITIONS = {
-  '预售中': ['预售中', '预售中', '暂时售罄', '暂时售罄', '已售罄'],
-  '暂时售罄': ['暂时售罄', '预售中', '预售中', '已售罄'],
+  '售卖中': ['售卖中', '售卖中', '暂时售罄', '暂时售罄', '已售罄'],
+  '暂时售罄': ['暂时售罄', '售卖中', '售卖中', '已售罄'],
   '已售罄': ['已售罄', '已售罄', '已售罄', '暂时售罄'],
-  '未开售': ['未开售', '预售中'],
+  '未开售': ['未开售', '售卖中'],
   '已停售': ['已停售'],
   '不可售': ['不可售'],
 };
@@ -147,7 +147,7 @@ function getMockData() {
   const screenData = screens.map(screen => {
     const tickets = screen.tickets.map(ticket => {
       if (!mockTicketStates[ticket.id]) {
-        mockTicketStates[ticket.id] = '预售中';
+        mockTicketStates[ticket.id] = '售卖中';
       }
       // ~30% 概率发生状态变化
       if (Math.random() < 0.3) {
@@ -177,7 +177,7 @@ function getMockData() {
       total: allTickets.length,
       soldOut: allTickets.filter(t => t.status === '已售罄').length,
       tempSoldOut: allTickets.filter(t => t.status === '暂时售罄').length,
-      onSale: allTickets.filter(t => t.status === '预售中').length,
+      onSale: allTickets.filter(t => t.status === '售卖中').length,
       notStarted: allTickets.filter(t => t.status === '未开售').length,
       stopped: allTickets.filter(t => t.status === '已停售').length,
       unavailable: allTickets.filter(t => t.status === '不可售').length,
