@@ -1,75 +1,71 @@
 @echo off
 chcp 65001 >nul
-title B站余票监控 - 启动中...
+title B站余票监控
 color 0B
 
 echo.
 echo  ╔══════════════════════════════════════════╗
 echo  ║                                          ║
-echo  ║        B站会员购余票监控 v1.0             ║
+echo  ║        B站会员购余票监控                  ║
 echo  ║                                          ║
 echo  ╚══════════════════════════════════════════╝
 echo.
 
 cd /d "%~dp0"
 
-:: 检查 node_modules 是否存在
 if not exist "node_modules\" (
-    echo  [提示] 首次运行，正在安装依赖...
+    echo  Installing dependencies...
     echo.
     call npm install
     echo.
-    echo  [提示] 依赖安装完成！
+    echo  Done!
     echo.
 )
 
-echo  [1/2] 启动后端服务...
-start "B站余票监控-后端" /min cmd /c "node server/server.js"
+echo  [1/2] Starting backend...
+start "bili-backend" /min cmd /c "node server/server.js"
 
-echo  [2/2] 启动前端页面...
-start "B站余票监控-前端" /min cmd /c "npx vite"
+echo  [2/2] Starting frontend...
+start "bili-frontend" /min cmd /c "npx vite"
 
-:: 等待服务启动
 echo.
-echo  等待服务启动...
+echo  Waiting...
 timeout /t 3 /nobreak >nul
 
-:: 打开浏览器
 echo.
 echo  ╔══════════════════════════════════════════╗
 echo  ║                                          ║
-echo  ║   正在打开浏览器...                      ║
+echo  ║   Opening browser...                     ║
 echo  ║                                          ║
-echo  ║   访问地址: http://localhost:5173         ║
+echo  ║   http://localhost:5173                   ║
 echo  ║                                          ║
-echo  ║   关闭此窗口即可停止程序                  ║
+echo  ║   Close browser to stop                   ║
 echo  ║                                          ║
 echo  ╚══════════════════════════════════════════╝
 echo.
 
 start http://localhost:5173
 
-echo  程序已启动！关闭监控页面后将自动停止所有服务...
+echo  Server running. Close browser to auto-stop...
 
 :monitor
 timeout /t 2 /nobreak >nul
 
-netstat -aon | findstr ":3001" | findstr "LISTENING" >nul 2>&1
+tasklist /FI "WINDOWTITLE eq bili-backend" 2>nul | find /I "cmd.exe" >nul
 if errorlevel 1 (
-    echo.
-    echo  服务已关闭，正在清理...
     goto :stop
 )
 goto :monitor
 
 :stop
-echo  正在停止服务...
-taskkill /F /FI "WINDOWTITLE eq B站余票监控-后端" >nul 2>&1
-taskkill /F /FI "WINDOWTITLE eq B站余票监控-前端" >nul 2>&1
+echo  Stopping...
+taskkill /F /FI "WINDOWTITLE eq bili-backend" >nul 2>&1
+taskkill /F /FI "WINDOWTITLE eq bili-frontend" >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5173" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
-echo  已停止，再见！
+echo  Done.
+timeout /t 2 /nobreak >nul
