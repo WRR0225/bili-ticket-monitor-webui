@@ -51,7 +51,7 @@ npm install
 npm run build
 ```
 
-**Windows 用户：** 双击 `启动余票监控_Windows.bat` 即可（需要先完成上面的 `npm run build`，脚本只负责启动，不会自动构建）。
+双击 `启动余票监控_Windows.bat` 即可（需要先完成上面的 `npm run build`，脚本只负责启动，不会自动构建）。
 
 **开发模式（改代码时用）：**
 
