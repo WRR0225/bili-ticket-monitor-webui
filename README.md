@@ -31,15 +31,16 @@
 
 ### 环境要求
 
-- [Node.js](https://nodejs.org/) >= 18
+- **方式一（下载 Release 包）**：不需要安装任何东西，包内已自带 Node.js 运行时
+- **方式二（源码运行）**：需要 [Node.js](https://nodejs.org/) >= 18
 
 ### 方式一：下载预打包版本（推荐）
 
-前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的 `.zip` 文件，解压到任意目录。
+前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的 `.zip` 文件（约 35 MB），解压到任意目录。
 
 **Windows 用户：**
 
-双击 `启动余票监控_Windows.bat`，自动打开浏览器访问监控页面。
+双击 `启动余票监控_Windows.bat`，脚本会启动本地服务并自动打开浏览器。关闭浏览器标签即自动停止，无需其它操作。
 
 **Mac 用户：**
 
@@ -50,7 +51,7 @@ chmod +x 启动余票监控_Mac.sh
 ./启动余票监控_Mac.sh
 ```
 
-> 已包含所有运行依赖，无需执行 `npm install`。
+> Mac 包目前仍依赖系统已安装的 Node.js，与 Windows 的双击即用方式不同。
 
 ### 方式二：克隆仓库 + 启动
 
@@ -58,11 +59,12 @@ chmod +x 启动余票监控_Mac.sh
 git clone https://github.com/WRR0225/bili-ticket-monitor-webui.git
 cd bili-ticket-monitor-webui
 npm install
+npm run build
 ```
 
-**Windows 用户：** 双击 `启动余票监控_Windows.bat` 即可。
+**Windows 用户：** 双击 `启动余票监控_Windows.bat` 即可（需要先完成上面的 `npm run build`，脚本只负责启动，不会自动构建）。
 
-**Mac用户：**
+**开发模式（改代码时用）：**
 
 ```bash
 npm run server
@@ -90,8 +92,10 @@ bili-ticket-monitor-webui/
 ├── index.html              # 入口 HTML
 ├── package.json            # 项目配置与依赖
 ├── vite.config.js          # Vite 构建配置（含 API 代理）
-├── 启动余票监控_Windows.bat  # Windows 一键启动脚本
+├── 启动余票监控_Windows.bat  # Windows 一键启动脚本（构建产物 + 内置运行时）
 ├── 启动余票监控_Mac.sh       # Mac启动脚本
+├── scripts/
+│   └── pack.js             # 生成 Release 压缩包（npm run pack）
 ├── server/
 │   └── server.js           # Express 后端（API 代理 + 模拟接口 + 静态文件托管）
 └── src/

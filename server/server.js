@@ -210,7 +210,17 @@ app.post('/api/shutdown', (req, res) => {
   setTimeout(() => process.exit(0), 500);
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🎫 B站余票监控后端已启动: http://localhost:${PORT}`);
   console.log(`📡 前端页面: http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ 端口 ${PORT} 已被占用：已有一个监控实例在运行。`);
+    console.error(`   直接访问 http://localhost:${PORT} 就能用，或先关掉其它监控窗口。`);
+  } else {
+    console.error('❌ 后端启动失败:', err.message);
+  }
+  process.exit(1);
 });
