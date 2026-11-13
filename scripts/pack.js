@@ -60,7 +60,6 @@ copy(path.join(root, 'server'), path.join(releaseDir, 'server'), '后端 server'
 copy(path.join(root, 'package.json'), path.join(releaseDir, 'package.json'), 'package.json');
 copy(path.join(root, 'package-lock.json'), path.join(releaseDir, 'package-lock.json'), 'package-lock.json');
 copy(path.join(root, '启动余票监控_Windows.bat'), path.join(releaseDir, '启动余票监控_Windows.bat'), 'Windows 启动脚本');
-copy(path.join(root, '启动余票监控_Mac.sh'), path.join(releaseDir, '启动余票监控_Mac.sh'), 'Mac 启动脚本');
 
 console.log(`\n[3/5] 安装生产依赖（需要联网）`);
 run('npm ci --omit=dev', releaseDir);

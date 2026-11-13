@@ -38,20 +38,9 @@
 
 前往 [Releases](https://github.com/WRR0225/bili-ticket-monitor-webui/releases) 页面下载最新的 `.zip` 文件（约 35 MB），解压到任意目录。
 
-**Windows 用户：**
-
 双击 `启动余票监控_Windows.bat`，脚本会启动本地服务并自动打开浏览器。关闭浏览器标签即自动停止，无需其它操作。
 
-**Mac 用户：**
-
-打开终端，进入解压目录，执行：
-
-```bash
-chmod +x 启动余票监控_Mac.sh
-./启动余票监控_Mac.sh
-```
-
-> Mac 包目前仍依赖系统已安装的 Node.js，与 Windows 的双击即用方式不同。
+（暂无 Mac 版本）
 
 ### 方式二：克隆仓库 + 启动
 
@@ -93,7 +82,6 @@ bili-ticket-monitor-webui/
 ├── package.json            # 项目配置与依赖
 ├── vite.config.js          # Vite 构建配置（含 API 代理）
 ├── 启动余票监控_Windows.bat  # Windows 一键启动脚本（构建产物 + 内置运行时）
-├── 启动余票监控_Mac.sh       # Mac启动脚本
 ├── scripts/
 │   └── pack.js             # 生成 Release 压缩包（npm run pack）
 ├── server/
